@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>用户购物车</title>
+    <script type="text/javascript">
+        $(function(){
+            var vm = new Vue({
+            el:"#vueel",
+            data:{
+                shoppingCarArr:[],
+                shoppingCarlist:{
+                    menuId:"",
+                    createTime:"",
+                    count:"",
+                    menuName:""
+                },
+                ShoppingIdArr:[],
+                shoppingCarId:[],
+                shoppingCarObj:{}
+            },
+            selectIndex:"",
+            methods:{
+                shoppingList(){
+                    var userId=window.location.search.split('=')[1];
+                    axios.get("http://localhost:8080/orderSystem/ShoppingCarServlet?userId="+userId).then(res=>{
+                        console.log(res);
+                        this.shoppingCarArr = res.data;
+                    });
+                },
+                shoppingOrder(){
+                    console.log("加入到订单列表");
+                    var userId=window.location.search.split('=')[1];
+                    var obj = {
+                        userId:userId,
+                        shoppingId:this.ShoppingIdArr
+                    }
+                    var opt = {
+                    url:"/orderSystem/AddOrderServlet",
+                    type:"POST",
+                    data:JSON.stringify(obj),
+                    dataType:"json",//指定服务器返回的数据类型
+                    success:function(text){//请求成功的回调函数
+                        alert("下单成功");
+						vm.shoppingList();
+                    }
+                }
+                $.ajax(opt);
+                },
+				check(shoppingId){
+				    this.ShoppingIdArr.push(shoppingId);
+				
+				},
+                sCar(id){
+                    this.shoppingCarId.push(id);
+                },
+                deleteCar(index,id){
+                    this.shoppingCarArr.splice(index,1);
+                    var shoppingCarIds=id;
+					debugger;
+                    var opt = {
+                        url:"/orderSystem/deleteShoppingCar?shoppingCarId="+shoppingCarIds,
+                        type:"POST",
+                        dataType:"json",//指定服务器返回的数据类型
+                        success:function(text){//请求成功的回调函数
+                            alert("删除成功");
+                        }
+                    }
+                    $.ajax(opt);
+
+                    //$("#myModal").modal('hide');
+                },
+                
+            }
+        });
+        vm.shoppingList();
+        });
+    </script>
+	<style type="text/css">
+		.text-right{
+			margin-right: 10px;
+			margin-top: 10px;
+		}
+	</style>
+</head>
+<body>
+     <div id = "vueel" class="span12">
+		 <div class="text-right">
+		 	<button type="button" class="btn btn-primary" @click = "shoppingOrder">下单</button>
+		 </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>菜品id</th>
+                    <th>菜品名</th>
+                    <th>创建时间</th>
+                    <th>数量</th>
+                    <th>勾选</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(item,index) in shoppingCarArr">
+                    <td>{{index+1}}</td>
+                    <td>{{item.menuId}}</td>
+                    <td>{{item.menuName}}</td>
+                    <td>{{item.createTime}}</td>
+                    <td>{{item.count}}</td>
+                    <td><input type="checkbox" @click = "check(item.id)"></td>
+                    <td class="text">
+                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModal" @click = "deleteCar(index,item.id)">删除</button>
+                    </td>
+                 </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+</body>
+</html>

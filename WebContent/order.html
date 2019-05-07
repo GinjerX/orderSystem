@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>2-3订单查询</title>
+<script type="text/javascript">
+    $(function(){
+            var vm = new Vue({
+                el:"#vueel",
+                data:{
+                    menus:[],
+                    menuss:{
+                        menuname:"",
+                        username:"",
+                        address:"",
+                        phone:"",
+                        state:""
+
+                    },
+					selectIndex:-1,
+					orderDetail:[],
+                    cancel:{
+                        cancelReason:"",
+                        selectId:""
+                    }
+                },
+				selectIndex:"",
+				computed:{
+					totalMoney:function(){
+						var total=0;
+						this.orderDetail.forEach((item,index)=>{
+							total+=(item.price-item.discountPrice)*item.count
+						})
+						return total;
+					}
+				},
+				mounted(){
+					this.orderlist();
+				},
+                methods:{
+                    orderlist(){
+                        axios.get("http://localhost:8080/orderSystem/QueryOrderInfosServlet").then(res=>{
+                            console.log(res);
+                            this.menus = res.data;
+                        });
+                    },
+                    cancelOrder(orderId){
+                        this.cancel.selectId = orderId;
+                        $("#canceModal").modal("show");
+                        console.log("取消订单");
+                    },
+                    jiedan(orderIds){//接单
+                        axios({
+                            method:"get",
+                            url:"CancelOrderStateServlet",
+                            params:{
+                                orderId:orderIds,
+                                state:2
+                            }
+
+                        }).then(res=>{
+                            vm.orderlist();
+                            toastr.success("接单成功");
+                            toastr.error("接单成功");
+                            toastr.warning("接单成功");
+
+                        }
+                       )
+
+                    },
+                    submitCancelOrder(){
+                        if(this.cancel.cancelReason==""){
+                            alert("请填写");
+                            return;
+                        }
+                        axios({
+                            method:"get",
+                            url:"CancelOrderStateServlet",
+                            params:{
+                                cancelReason:this.cancel.cancelReason,
+                                orderId:this.cancel.selectId,
+                                state:5
+                            }
+                        })
+                    },
+					userQuerystate(state){//根据状态查询
+						axios({
+							method: 'get',
+							url: 'QueryOrderInfosServlet',
+							params: {
+								state:state
+							},
+							responseType: 'json',
+						}).then(res=>{
+							this.menus = res.data;
+						});
+					},
+					orderXianqin(orderId,index){
+						this.selectIndex=index;
+					    console.log("订单详情");
+						
+						axios({
+							method: 'get',
+							url: 'NewShoppingCarServlet',
+							params: {
+								orderId:orderId
+							},
+							responseType: 'json',
+						}).then(res=>{
+							this.orderDetail = res.data;
+							$("#orderXin").modal("show");
+						});
+					}
+                }
+            });
+            vm.orderlist();
+
+        })
+</script>
+<style type="text/css">
+	.orderstatequery{
+		height: 40px;
+		margin-top: 20px;
+		margin-left: 10px;
+		font-size: 15px;
+	}
+	.orderstatequery input{
+		padding-left: 5px;
+	}
+</style>
+</head>
+<body>
+    <div id="vueel">
+		<div  class="orderstatequery">
+			<P>搜索：<input id = "state" type="radio" name="state" value="all" @click="userQuerystate()">全部
+					<input id = "state" type="radio" name="state" value="0" @click="userQuerystate(0)">已取消
+					<input id = "state" type="radio" name="state" value="1" @click="userQuerystate(1)">已接单
+					<input id = "state" type="radio" name="state" value="2" @click="userQuerystate(2)">未接单
+					<input id = "state" type="radio" name="state" value="3" @click="userQuerystate(3)">已收货
+			</P>
+		</div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>订单号</th>
+                    <th>创建时间</th>
+                    <th>菜品名</th>
+                    <th>用户名</th>
+                    <th>联系电话</th>
+                    <th>收货地址</th>
+                    <th>状态</th>
+                     <th>取消原因</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(item,index) in menus">
+                   <td>{{index+1}}</td>
+                   <td>{{item.orderId}}</td>
+                   <td>{{item.createTime}}</td>
+                   <td>{{item.menuname}}</td>
+                   <td>{{item.username}}</td>
+                   <td>{{item.phone}}</td>
+                   <td>{{item.address}}</td>
+                   <td>{{item.stateName}}</td>
+                   <td>{{item.cancelReason}}</td>
+                   <td v-if="item.state==1"><a href="javescprit:void(0)" @click="cancelOrder(item.orderId)">取消订单  </a><a href="javescprit:void(0)" @click="jiedan(item.orderId)">  接单</a></td>
+                   <td v-if=" item.state!=1"></td>
+				   <td class="text-right">
+				       <button type="button" class="btn btn-danger"@click ="orderXianqin(item.orderId,index)">订单详情</button>
+				  </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 模态框（Modal） -->
+        <div class="modal fade" id="canceModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">请填写取消原因</h4>
+                    </div>
+                    <div class="modal-body">
+                         <label for="cancelReason">取消原因:</label>
+                        <textarea class="form-control" rows="3" v-model="cancel.cancelReason"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" @click="submitCancelOrder">提交更改</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
+		
+		 <!-- 模态框（Modal） -->
+		<div class="modal fade" id="orderXin" tabindex="-1" role="dialog" aria-labelledby="orderXinmyModalLabel" aria-hidden="true">
+		    <div class="modal-dialog">
+		        <div class="modal-content">
+		            <div class="modal-header">
+		                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		                <h4 class="modal-title" id="orderXinmyModalLabel">订单详情</h4>
+		            </div>
+					<div class="modal-body">
+						<div  class="text-center">
+							<ul style="list-style: none;">
+								<li v-if="menus[selectIndex]">用户名：{{menus[selectIndex].username}}</li>
+								<li v-if="menus[selectIndex]">地址：{{menus[selectIndex].address}}</li>
+								<li v-if="menus[selectIndex]">电话：{{menus[selectIndex].phone}}</li>
+							</ul>
+						</div>
+						<table class="table">
+						    <thead>
+						        <tr>
+						            <th>订单号</th>
+						            <th>菜品名</th>
+						            <th>菜品价格</th>
+						            <th>优惠价格</th>
+						            <th>数量</th>
+						            <th>金额</th>
+						        </tr>
+						    </thead>
+						    <tbody>
+						        <tr v-for="(item,index) in orderDetail">
+						           <td>{{item.orderIdOm}}</td>
+						           <td>{{item.greens_name}}</td>
+						           <td>{{item.price}}</td>
+						           <td>{{item.discountPrice}}</td>
+						           <td>{{item.count}}</td>
+						           <td>{{(item.price-item.discountPrice)*item.count}}</td>
+						        </tr>
+						    </tbody>
+						</table>
+						<div class="text-center">
+							<h3>总金额:</h3>
+							<h2>{{totalMoney}}￥</h2>
+						</div>
+					</div>
+		            <div class="modal-footer">
+		                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+		            </div>
+		        </div><!-- /.modal-content -->
+		    </div><!-- /.modal -->
+		</div>
+
+    </div>
+</body>
+</html>

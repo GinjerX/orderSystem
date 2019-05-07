@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>路由登录</title>
+		<script type="text/javascript" src="static/vue.js"></script>
+		<script type="text/javascript" src="static/vue-router.js"></script>
+		<script type="text/javascript" src="static/jquery/dist/jquery.min.js"></script>
+		<script type="text/javascript" src="static/bootstrap/dist/js/bootstrap.js"></script>
+		<link rel="stylesheet" type="text/css" href="static/animate.css"/>
+		<link rel="stylesheet" type="text/css" href="static/bootstrap/dist/css/bootstrap.css">
+		<script type="text/javascript" src="static/axios.js"></script>
+		<style type="text/css">
+			.form-group{
+				height: 50px;
+				width: 200px;
+			}
+			#vueel input{
+				width: 230px;
+				height: 40px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="vueel">
+			<div>
+				<!--组件导航 -->
+				 <router-link to="/userlogin"></router-link>
+				 <router-link to="/register"></router-link>
+				 <router-link to="/admin"></router-link>
+			</div>
+			<div>
+				<!-- router-view用来展示路由的内容 -->
+				<transition enter-active-class="animated fadeOutDown" leave-active-class="animated fadeInDown">
+					<router-view></router-view>
+				</transition>
+				
+			</div>
+		</div>
+		
+		<template id="userlogin">
+			 <div class="container">
+			    <h3>系统登录页面</h3>
+			    <form>
+			        <div class="form-group">
+			            <label for="exampleInputEmail1">账户：</label>
+			            <input class="form-control" placeholder="请输入账户名" v-model="user.username">
+			        </div>
+			        <div class="form-group">
+			            <label for="exampleInputEmail1">密码：</label>
+			            <input class="form-control" placeholder="请输入密码" v-model="user.password">
+			        </div>
+			        <div class="form-group">
+			            <button type="button" class= "btn btn-primary" @click="Affirmlogin">登录</button>
+			            <span @click="replace" class="btn btn-default" role="button" style="background-color:#00BFFF">选择注册</span>
+			        </div>
+			    </form>
+			</div>
+			
+		</template>
+		
+		<template id="register">
+			<div class="container">
+			    <h3>用户注册</h3>
+			    <form>
+			        <div class="form-group">
+			            <label >姓名：</label>
+			            <input class="form-control" placeholder="请输入姓名" v-model="user.username">
+			        </div>
+			        <div class="form-group">
+			            <label >密码：</label>
+			            <input class="form-control" placeholder="请输入密码" v-model="user.password">
+			        </div>
+			        <div class="form-group">
+			            <label >电话：</label>
+			            <input class="form-control" placeholder="请输入联系" v-model="user.phone">
+			        </div>
+			        <div class="form-group">
+			            <label >地址：</label>
+			            <input class="form-control" placeholder="请输入收货地址" v-model="user.address">
+			        </div>
+			        <div class="form-group">
+			            <button type="button" class= "btn btn-primary" @click="addUser">注册</button>
+						<span @click="replace" class="btn btn-default" role="button" style="background-color:#00BFFF">返回登录</span>
+			            
+			        </div>
+			    </form>
+			</div>
+		</template>
+		<template id="admin">
+			<div class="container-fluid">
+			    <div class="row-fluid">
+			        <div class="span4">
+			            <ul class="nav nav-list">
+			                <li class="nav-header">
+			                   <h4 class="text-success ">
+			                    后台管理
+			                    </h4>
+			                </li>
+			                <li class="active" id = "menu">
+			                    <button @click ="replace" class="btn btn-info" type="button">菜单列表</button>
+			                </li>
+			                <li>
+			                    <button @click = "a" class="btn btn-info" type="button">菜单增加</button>
+			                </li>
+			            </ul>
+			        </div>
+					<div>
+						<div>
+							<!--组件导航 -->
+							 <router-link to="/admin/menulist"></router-link>
+							 <router-link to="/admin/menuadd"></router-link>
+							 <router-link to="/admin/update"></router-link>
+							 
+							 
+						</div>
+						<div>
+							<!-- router-view用来展示路由的内容 -->
+							<transition enter-active-class="animated fadeOutDown" leave-active-class="animated fadeInDown">
+								<router-view></router-view>
+							</transition>
+							
+						</div>
+					</div>
+				</div>
+			</div>
+		</template>
+		<template id = "menuslist">
+			<div>
+				<hr >
+				<div class="span12">
+					<div class="col col-sm-4">
+						<input class="input-medium search-query form-control" type="text" v-model="menuss.menuquery">
+					</div>
+					<div class="col col-sm-2">
+						<button type="button" class="btn btn-success" @click="querymenusName">查找</button>
+					</div>
+				</div>
+			    <table class="table">
+			        <thead>
+			            <tr>
+			                <th>编号</th>
+			                <th>餐品</th>
+			                <th>价格</th>
+			                <th>优惠价格</th>
+			                <th>创建时间</th>
+			                <th>状态</th>
+			                <th>是否顶置</th>
+			                <th>操作</th>
+			            </tr>
+			        </thead>
+			        <tbody>
+			            <tr v-for="(item,index) in menus">
+			                <td>{{index+1}}</td>
+			                <td>{{item.name}}</td>
+			                <td>{{item.price}}</td>
+			                <td>{{item.discountPrice}}</td>
+			                <td>{{item.groundingTime}}</td>
+			                <td>{{item.stateName}}</td>
+			                <td>{{item.isTop}}</td>
+			                 <td v-if="item.state==2"><a href="javescprit:void(0)" @click="deletemenu(item.id)">删除</a></td>
+			                 <td v-if=" item.state!=2"></td>
+			
+			                <td class="text">
+			                   <button type="button" class="btn btn-primary" @click = "b(index)">修改</button>
+			
+			               </td>
+			             </tr>
+			        </tbody>
+			    </table>
+			     
+			</div>
+		</template>
+		<template id = "menuupdate">
+			<div class="container">
+			    <form>
+			        <div class="form-group">
+			            <label >菜名：</label>
+			            <input class="form-control" placeholder="请输入菜名" v-model="menuinfo.name">
+			        </div>
+			         <div class="form-group">
+			            <label >价格：</label>
+			            <input class="form-control" placeholder="请输入价格" v-model="menuinfo.price">
+			        </div>
+			         <div class="form-group">
+			            <label >优惠价格：</label>
+			            <input class="form-control" placeholder="请输入优惠价格" v-model="menuinfo.discountPrice">
+			        </div>
+			        <div>
+			            <label for="name">是否顶置</label>
+			            <select class="form-control" v-model="menuinfo.isTop">
+			                <option>Y</option>
+			                <option>N</option>
+			            </select>
+			        </div>
+					<div>
+					    <label for="name">状态</label>
+					    <select class="form-control" v-model="menuinfo.state">
+					        <option value="1">上架</option>
+					        <option value="2">下架</option>
+					    </select>
+					</div>
+			        <hr>
+			        <div class="form-group">
+			            <button type="button" class="btn btn-primary" @click= "updatemnus">修改</button>
+			        </div>
+			    </form>
+				
+			</div>
+			            
+		</template>
+		<template id = "menuAdd">
+			<div class="container">
+			    <h3>菜品增加</h3>
+			    <form>
+			        <div class="form-group">
+			            <label >菜名：</label>
+			            <input class="form-control" placeholder="请输入菜名" v-model="menus.name">
+			        </div>
+			         <div class="form-group">
+			            <label >价格：</label>
+			            <input class="form-control" placeholder="请输入价格" v-model="menus.price">
+			        </div>
+			         <div class="form-group">
+			            <label >优惠价格：</label>
+			            <input class="form-control" placeholder="请输入优惠价格" v-model="menus.discountPrice">
+			        </div>
+			        <div>
+			            <label for="name">是否顶置</label>
+			            <select class="form-control" v-model="menus.isTop" style="width:100px ;">
+			                <option>Y</option>
+			                <option>N</option>
+			            </select>
+			        </div>
+			        <hr>
+			        <div class="form-group">
+			            <button type="button" class= "btn btn-primary" @click="addMenus">添加</button>
+			        </div>
+			    </form>
+			</div>
+		</template>
+	</body>
+	<script type="text/javascript" src="routerLogin.js"></script>
+
+</html>

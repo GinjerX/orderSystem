@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>01用户登录页面</title>
+    <script type="text/javascript" src="static/vue.js"></script>
+    <script type="text/javascript" src="static/bootstrap/dist/js/bootstrap.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/bootstrap/dist/css/bootstrap.css">
+	<script type="text/javascript" src="static/CodeSeven-toastr-50092cc/build/toastr.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="static/CodeSeven-toastr-50092cc/build/toastr.css">
+    <script type="text/javascript" src="static/axios.js"></script>
+    <script type="text/javascript">
+        window.onload = function(){
+            var vm = new Vue({
+                el:"#vueel",//关联元素
+                data:{
+                    user:{
+                        username:"",
+                        password:"",
+                        phone:"",
+                        address:""
+
+                    },
+                    users:[],
+                },
+                methods:{
+                    addUser(){
+						
+                        this.users.push(this.user);
+                        this.user = {}
+						var obj = {
+							userObj:JSON.stringify(this.users[0])
+						}
+                        axios.get("http://localhost:8080/orderSystem/registerServlet.do",{
+                            params:obj
+                        }).then(res=>{
+							console.log(res);
+							alert(res.data.msg);
+							/* 
+							toastr.success("注册成功"); */
+                        });
+						debugger;
+                    }
+                }
+            })
+        }
+    </script>
+</head>
+<body>
+    <div id = "vueel" class="container">
+        <h3>用户注册</h3>
+        <form>
+            <div class="form-group">
+                <label >姓名：</label>
+                <input class="form-control" placeholder="请输入姓名" v-model="user.username">
+            </div>
+            <div class="form-group">
+                <label >密码：</label>
+                <input class="form-control" placeholder="请输入密码" v-model="user.password">
+            </div>
+            <div class="form-group">
+                <label >电话：</label>
+                <input class="form-control" placeholder="请输入联系" v-model="user.phone">
+            </div>
+            <div class="form-group">
+                <label >地址：</label>
+                <input class="form-control" placeholder="请输入收货地址" v-model="user.address">
+            </div>
+            <div class="form-group">
+                <button type="button" class= "btn btn-primary" @click="addUser">注册</button>
+                <a class="btn btn-default" href="login.html" role="button" style="background-color:#00BFFF">返回登录</a>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>2-1菜单列表</title>
+    <script type="text/javascript">
+        $(function(){
+            var vm = new Vue({
+                el:"#vueel",
+                data:{
+                    menus:[],
+                    menuss:{
+                        name:"",
+                        price:"",
+                        discountPrice:"",
+                        groundingTime:"",
+                        state:"",
+                        isTop:"",
+						menuquery:""
+
+                    },
+                    menusObj:{}
+                },
+                selectIndex:"",
+                methods:{
+                    menuslist(){
+                        axios.get("http://localhost:8080/orderSystem/MenuAllServlet").then(res=>{
+                            console.log(res);
+                            this.menus = res.data.body;
+                        });
+                    },
+                     updatemodel(index){//传入数据
+                        this.selectIndex=index;
+                        this.menuss = clonesss(this.menus[index]);
+
+                    },
+                    updatemnus(){//修改菜单
+                        this.menus[this.selectIndex] = this.menuss;
+                        this.menusObj = this.menus[this.selectIndex];
+                        var p = {
+                            obj:JSON.stringify(this.menusObj)
+                        }
+                        this.menuss = {};
+                        axios.get("http://localhost:8080/orderSystem/UpdateMenuServlet",{
+                                params:p
+                            }).then(res=>{
+								this.menuslist();
+                                console.log(res);
+                        });
+
+                    },
+                    deletemenu(menuId){//根据菜单id修改菜单列表删除功能(软删除)
+                        axios({
+                            method:"get",
+                            url:"CancelOrderStateServlet",
+                            params:{
+                                menuId:menuId,
+                                state:4
+                            }
+
+                        }).then(res=>{
+                            vm.menuslist();
+                            toastr.success("删除成功");
+
+                        }
+                       )
+                    },
+					querymenusName(){//根据menuName 查询订单
+						var menusss = {
+							obj: JSON.stringify(this.menuss.menuquery)
+						} 
+						
+						axios({
+						     method:"get",
+						     url:"MenuAllServlet",
+						     params:{
+								 menusname:this.menuss.menuquery
+						     }
+						
+						 }).then(res=>{
+							 console.log(res+"aaaaaaaaaa")
+							 this.menus = res.data.body;
+						 })
+						/* axios.get("http://localhost:8080/orderSystem/MenuAllServlet",{
+						         params:menusss
+						}).then(res=>{
+							vm.menuslist();
+						}) */
+						
+					}
+                },
+
+
+            });
+             function clonesss(objJson){
+                return JSON.parse(JSON.stringify(objJson));
+            }
+            vm.menuslist();
+        })
+    </script>
+    <style type="text/css">
+        #adiv{
+            width: 100%;
+			height: 80px;
+			background-color: #48D1CC;
+			text-align: center;
+			padding-top: 10px;
+		
+
+        }
+    </style>
+</head>
+<body>
+    <div id = "vueel" >
+        <div id= "adiv">
+            <h3>XXXX餐厅菜单列表</h3>
+        </div>
+        <hr>
+		<div class="span12">
+			<div class="col col-sm-4">
+				<input class="input-medium search-query form-control" type="text" v-model="menuss.menuquery">
+			</div>
+			<div class="col col-sm-2">
+				<button type="button" class="btn btn-success" @click="querymenusName">查找</button>
+			</div>
+		</div>
+		
+	<!-- 	<div class="form-group" id="menuQuery" >
+
+				<input class="form-control"  v-model="menuss.name" style="width: 200px; height: 30px; margin-left: 30px;">
+				<button  class="btn"style="">查找</button>
+		</div> -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>餐品</th>
+                    <th>价格</th>
+                    <th>优惠价格</th>
+                    <th>创建时间</th>
+                    <th>状态</th>
+                    <th>是否顶置</th>
+                    <th>操作</th>
+                </tr>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(item,index) in menus">
+                    <td>{{index+1}}</td>
+                    <td>{{item.name}}</td>
+                    <td>{{item.price}}</td>
+                    <td>{{item.discountPrice}}</td>
+                    <td>{{item.groundingTime}}</td>
+                    <td>{{item.stateName}}</td>
+                    <td>{{item.isTop}}</td>
+                     <td v-if="item.state==2"><a href="javescprit:void(0)" @click="deletemenu(item.id)">删除</a></td>
+                     <td v-if=" item.state!=2"></td>
+
+                    <td class="text">
+                       <button type="button" class="btn btn-primary" data-target="#update" data-toggle="modal" @click = "updatemodel(index)">修改</button>
+
+                   </td>
+                 </tr>
+            </tbody>
+        </table>
+         <div class="modal fade" id ="update" tabindex="-1" role = "dialog" aria-labelledby="myModelLabel" aria-hidden = "true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">提示</h4>
+                    </div>
+                    <form>
+                        <div class="form-group">
+                            <label>姓名：</label>
+                            <input class="form-control"  v-model="menuss.name">
+                        </div>
+                         <div class="form-group">
+                            <label>价格：</label>
+                            <input class="form-control"  v-model="menuss.price">
+                        </div>
+                         <div class="form-group">
+                            <label>优惠价格：</label>
+                            <input class="form-control"  v-model="menuss.discountPrice">
+                        </div>
+                         <div class="form-group">
+                            <label>创建时间：</label>
+                            <input class="form-control"  v-model="menuss.groundingTime">
+                        </div>
+                         <div class="form-group">
+                             <label for="name">状态</label>
+                            <select class="form-control" v-model="menuss.state">
+                                <option value ="1">上架</option>
+                                <option value="2">下架</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="name">是否顶置</label>
+                            <select class="form-control" v-model="menuss.isTop">
+                                <option>Y</option>
+                                <option>N</option>
+                            </select>
+                        </div>
+                    </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" @click ="updatemnus()">修改</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
